@@ -1,4 +1,5 @@
 use itertools::Itertools;
+use std::collections::HashMap;
 use std::fmt;
 
 #[derive(Debug, Clone, Default)]
@@ -21,15 +22,18 @@ impl fmt::Display for ClippyConfiguration {
 }
 
 impl ClippyConfiguration {
-    pub fn to_markdown_paragraph(&self) -> String {
+    pub fn to_markdown_paragraph(&self, lint_groups: &HashMap<String, &str>) -> String {
         format!(
             "## `{}`\n{}\n\n**Default Value:** `{}`\n\n---\n**Affected lints:**\n{}\n\n",
             self.name,
             self.doc.lines().map(|x| x.strip_prefix(' ').unwrap_or(x)).join("\n"),
             self.default,
-            self.lints.iter().format_with("\n", |name, f| f(&format_args!(
-                "* [`{name}`](https://rust-lang.github.io/rust-clippy/master/index.html#{name})"
-            ))),
+            self.lints.iter().format_with("\n", |name, f| {
+                let group = lint_groups.get(*name).copied().unwrap_or("unknown");
+                f(&format_args!(
+                    "* [`{name}`](https://rust-lang.github.io/rust-clippy/master/index.html#{name}) ({group})"
+                ))
+            }),
         )
     }
 
