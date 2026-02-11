@@ -37,6 +37,32 @@ impl ClippyConfiguration {
         )
     }
 
+    /// Renders as a `###` heading with doc and default value, but no affected lints list.
+    pub fn to_markdown_heading3(&self) -> String {
+        format!(
+            "### `{}`\n{}\n\n**Default Value:** `{}`\n",
+            self.name,
+            self.doc.lines().map(|x| x.strip_prefix(' ').unwrap_or(x)).join("\n"),
+            self.default,
+        )
+    }
+
+    /// Renders as a `###` heading with doc, default value, and affected lints list.
+    pub fn to_markdown_heading3_with_lints(&self, lint_groups: &HashMap<String, &str>) -> String {
+        format!(
+            "### `{}`\n{}\n\n**Default Value:** `{}`\n\n**Affected lints:**\n{}\n",
+            self.name,
+            self.doc.lines().map(|x| x.strip_prefix(' ').unwrap_or(x)).join("\n"),
+            self.default,
+            self.lints.iter().format_with("\n", |name, f| {
+                let group = lint_groups.get(*name).copied().unwrap_or("unknown");
+                f(&format_args!(
+                    "* [`{name}`](https://rust-lang.github.io/rust-clippy/master/index.html#{name}) ({group})"
+                ))
+            }),
+        )
+    }
+
     pub fn to_markdown_link(&self) -> String {
         const BOOK_CONFIGS_PATH: &str = "https://doc.rust-lang.org/clippy/lint_configuration.html";
         format!("[`{}`]: {BOOK_CONFIGS_PATH}#{}", self.name, self.name)
